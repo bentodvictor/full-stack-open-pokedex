@@ -10,13 +10,8 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
@@ -24,5 +19,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - name: install
     - run: npm ci
-    - npm: npm run eslint
+    - name: lint
+    - run: npm run eslint
