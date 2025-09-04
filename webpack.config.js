@@ -1,12 +1,13 @@
 const HtmlWebPackPlugin = require("html-webpack-plugin");
-const path = require('path');
+const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
   entry: "./src/index.jsx",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
-    publicPath: '/'
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+    publicPath: "/",
   },
   module: {
     rules: [
@@ -27,8 +28,8 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        loaders: ['style-loader', 'css-loader'],
-      }
+        loaders: ["style-loader", "css-loader"],
+      },
     ],
   },
   resolve: {
@@ -41,6 +42,9 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./public/index.html",
       filename: "./index.html",
+    }),
+    new webpack.DefinePlugin({
+      "process.env.PORT": JSON.stringify(process.env.PORT),
     }),
   ],
 };
