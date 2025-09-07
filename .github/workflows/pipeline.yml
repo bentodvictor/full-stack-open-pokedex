@@ -34,8 +34,19 @@ jobs:
           npx playwright test
       - name: Deploy
         # Only run this step if the branch is main
-        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name == 'push')}} 
+        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push')}}
         env:
           deploy_url: https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
         run: |
           curl "$deploy_url"
+  tag_release:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump version and push tag
+        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push')}}
+        uses: anothrNick/github-tag-action@1.75.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
