@@ -44,8 +44,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bump version and push tag
-        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push')}}
+
+      - name: Print commit messages
+        env:
+          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.messages) }}
+        run: echo "$COMMIT_MESSAGES"
+
+      - name: Check for '#skip' in commit messages
+        id: check_skip
+        run: |
+          echo "Checking for #skip in commit messages..."
+          echo '${{ toJson(github.event.commits.*.message) }}' > messages.json
+          if grep -q "#skip" messages.json; then
+            echo "Found #skip. Skipping tag and deploy."
+            echo "skip_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "No #skip found."
+            echo "skip_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Tag commit
+        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push') && steps.check_skip.outputs.skip_deploy == 'false' }}
         uses: anothrNick/github-tag-action@1.75.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
