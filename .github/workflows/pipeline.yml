@@ -26,6 +26,12 @@ jobs:
         run: npm run eslint
       - name: Build
         run: npm run build
+      # - uses: rjstone/discord-webhook-notify@v1
+      #   if: failure()
+      #   with:
+      #       severity: error
+      #       details: Build failed at Pulkitxm/full-stack-open-pokedex deployed.
+      #       webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
       - name: Test
         run: npm run test
       - name: E2E Test
@@ -45,27 +51,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Print commit messages
-        env:
-          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.messages) }}
-        run: echo "$COMMIT_MESSAGES"
-
-      - name: Check for '#skip' in commit messages
-        id: check_skip
-        run: |
-          echo "Checking for #skip in commit messages..."
-          echo '${{ toJson(github.event.commits.*.message) }}' > messages.json
-          if grep -q "#skip" messages.json; then
-            echo "Found #skip. Skipping tag and deploy."
-            echo "skip_deploy=true" >> $GITHUB_OUTPUT
-          else
-            echo "No #skip found."
-            echo "skip_deploy=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Tag commit
-        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push') && steps.check_skip.outputs.skip_deploy == 'false' }}
+        if: ${{ (github.ref == 'refs/heads/master') && (github.event_name == 'push') && (!contains(join(toJSon(github.event.commits.*.message)), 'skip')) }}
         uses: anothrNick/github-tag-action@1.75.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
+      # - uses: rjstone/discord-webhook-notify@v1
+      #   if: success()
+      #   with:
+      #       severity: informational
+      #       details:  A new version of Pulkitxm/full-stack-open-pokedex deployed.
+      #       webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+  # health_check:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check the deployed service URL
+  #       uses: jtalk/url-health-check-action@v3
+  #       with:
+  #         url: your_url
+  #         follow-redirect: false
+  #         max-attempts: 3
+  #         retry-delay: 10s
+  #         retry-all: false
